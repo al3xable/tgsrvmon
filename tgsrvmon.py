@@ -70,7 +70,7 @@ def checkHost(host):
     except URLError as e:
         code = e.reason
 
-    ok = (code in [200, 403, 403])
+    ok = (code in [200, 401, 402, 403, 404])
 
     if ok:
         status = "OK (" + str(code) + ")"
