@@ -69,6 +69,8 @@ def checkHost(host):
         code = e.code
     except URLError as e:
         code = e.reason
+    except Exception as e:
+        code = str(e.args)
 
     ok = (code in [200, 401, 402, 403, 404])
 
