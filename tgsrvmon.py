@@ -64,7 +64,7 @@ def checkHost(host):
     srvip = host[0]
 
     try:
-        code = urllib.request.urlopen("http://" + srvip).getcode()
+        code = urllib.request.urlopen("http://" + srvip, timeout=10).getcode()
     except HTTPError as e:
         code = e.code
     except URLError as e:
