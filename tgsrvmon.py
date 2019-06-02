@@ -19,7 +19,7 @@ import json
 import logging
 import time
 import urllib.request
-from threading import Thread, Event
+from multiprocessing import Process
 from urllib.error import HTTPError, URLError
 
 from telegram import TelegramError
@@ -30,15 +30,13 @@ config = None
 logger = None
 
 
-def servers_monitor(bot, run):
-    while run.is_set():
+def servers_monitor(bot):
+    while True:
         try:
             fail = False
             resp = '```\n'
 
             for host in config['hosts']:
-                if not run.is_set():
-                    return
                 r, st = checkHost(host)
                 fail = fail or not st
                 if not st:
@@ -49,7 +47,7 @@ def servers_monitor(bot, run):
             if fail:
                 bot.sendMessage(chat_id=config['chat'], text=resp, parse_mode="Markdown")
 
-            run.wait(config['monitorSleep'])
+            time.sleep(config['monitorSleep'])
         except TelegramError as e:
             logger.error('Monitor exception: {}'.format(e.message))
         except Exception as e:
@@ -113,17 +111,13 @@ def main():
 
     updater.start_polling(timeout=config['poolTimeout'])
 
-    run = Event()
-    run.set()
-
-    th = Thread(target=servers_monitor, args=(updater.bot, run))
-    th.start()
+    monitor = Process(target=servers_monitor, args=(updater.bot,))
+    monitor.start()
 
     updater.idle()
 
     # Stopping thread
-    run.clear()
-    th.join()
+    monitor.terminate()
 
 
 if __name__ == '__main__':
