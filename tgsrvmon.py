@@ -78,7 +78,7 @@ def checkHost(host):
 
     ok = (code in [200, 401, 402, 403, 404])
 
-    resp += "%-16s | %4sms | %s\n" % (host[0], ping, str(code))
+    resp += "%-18s | %4sms | %s\n" % (host[0], ping, str(code))
 
     return resp, ok
 
