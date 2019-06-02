@@ -37,6 +37,8 @@ def servers_monitor(bot, run):
             resp = '```\n'
 
             for host in config['hosts']:
+                if not run.is_set():
+                    return
                 r, st = checkHost(host)
                 fail = fail or not st
                 if not st:
@@ -47,7 +49,7 @@ def servers_monitor(bot, run):
             if fail:
                 bot.sendMessage(chat_id=config['chat'], text=resp, parse_mode="Markdown")
 
-            time.sleep(config['monitorSleep'])
+            run.wait(config['monitorSleep'])
         except TelegramError as e:
             logger.error('Monitor exception: {}'.format(e.message))
         except Exception as e:
@@ -63,8 +65,10 @@ def checkHost(host):
     resp = ''
     srvip = host[0]
 
+    start_time = time.time()
+
     try:
-        code = urllib.request.urlopen("http://" + srvip, timeout=10).getcode()
+        code = urllib.request.urlopen("http://" + srvip, timeout=5).getcode()
     except HTTPError as e:
         code = e.code
     except URLError as e:
@@ -72,14 +76,11 @@ def checkHost(host):
     except Exception as e:
         code = str(e.args)
 
+    ping = int((time.time() - start_time) * 1000)
+
     ok = (code in [200, 401, 402, 403, 404])
 
-    if ok:
-        status = "OK (" + str(code) + ")"
-    else:
-        status = "FAIL (" + str(code) + ")"
-
-    resp += "%10s | %-15s | %s\n" % (host[1], host[0], status)
+    resp += "%-16s | %4sms | %s\n" % (host[0], ping, str(code))
 
     return resp, ok
 
